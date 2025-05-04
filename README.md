@@ -66,6 +66,3 @@ Other Options:
     - Upper Midrange 2000 to  4000 Hz
     - Presence       4000 to  6000 Hz
     - Brilliance     6000 to 20000 Hz
-
-
-## License
