@@ -131,6 +131,92 @@ void draw_basic_bars(WINDOW *win, double *fft_bins) {
   wrefresh(win);
 }
 
+void draw_mirrored_bars(WINDOW *win, double *fft_bins) {
+  const int band_ranges[7][2] = {
+      {0, 1},    //
+      {1, 2},    // 
+      {3, 4},
+      {5, 7},    // 
+      {8, 17},   // 
+      {18, 46},  //
+      {46, 232},
+  };
+
+  int max_x, max_y;
+  getmaxyx(win, max_y, max_x);
+  int half_h = max_y/2 - 1;
+
+  double band_values[7] = {0};
+
+  // average db for each band
+  for (int b = 0; b < 7; b++) {
+      double sum = 0;
+      int count = 0;
+      for (int i = band_ranges[b][0]; i <= band_ranges[b][1]; i++) {
+          sum += fft_bins[i];
+          count++;
+      }
+      band_values[b] = count > 0 ? sum / count : 0;
+  }
+
+  // Increase db of higher freq bands
+  // ToDo: find good values
+  band_values[3] *= 1.05;
+  band_values[5] *= 1.2;
+  band_values[6] *= 2.4;  
+
+  // ToDo: find good values
+  const double max_db = 75.0;
+  const double min_db = 13.0;
+  static double peak_db = 0.0;
+
+  // Update peak
+  for (int i = 0; i < 7; i++) {
+      if (band_values[i] > peak_db) {
+          peak_db = band_values[i];
+    }
+  }
+
+  // Drop peak
+  peak_db *= 0.99;
+
+  // get maximum peak
+  double ceiling = fmax(peak_db, max_db);
+
+  int offset_x = (max_x / 2) - 30;
+
+  werase(win);
+
+  // Draw each band as a vertical bar
+  for (int i = 0; i < 7; i++) {
+
+      // floor out quiet noise
+      double floor = band_values[i] - min_db;
+      if (floor < 0) {
+        floor = 0;
+      }
+
+      // normalize to 0-1
+      double norm = floor / (ceiling - min_db);
+      if (norm > 1) {
+        norm = 1;
+      }
+
+      // ToDo: test snappiness increase
+      norm = pow(norm, 1.5);
+
+      int height = (int)(norm * half_h);
+
+      //int height = (int)((band_values[i] / max_db) * (max_y - 1));
+      for (int j = 0; j < height; j++) {
+          mvwaddwstr(win, (max_y / 2) - j, offset_x + (i * 10) - 3, L"███████");
+          mvwaddwstr(win, (max_y / 2) + j, offset_x + (i * 10) - 3, L"███████");
+      }
+  }
+
+  wrefresh(win);
+}
+
 void draw_colored_bars(WINDOW *win, double *fft_bins) {
   const int band_ranges[7][2] = {
       {0, 1},    // Sub Bass: 20–60 Hz
@@ -231,6 +317,9 @@ int main(void)
           draw_basic_bars(win, smoothed_bins);  // Draw basic bars
           break;
         case 2:
+          draw_mirrored_bars(win, smoothed_bins); // Draw mirrored bars
+          break;
+        case 3:
           draw_colored_bars(win, smoothed_bins);  // Draw colored bars
           break;
       }
@@ -250,7 +339,7 @@ int main(void)
 
     // ToDo: Change when there are more than two different styles
     if(ch == 'n' || ch == 'N' || ch == 'p' || ch == 'P') {
-      if(style == 2) {
+      if(style == 3) {
         style = 0;
       } else {
         style++;

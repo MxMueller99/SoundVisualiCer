@@ -45,7 +45,6 @@ make
 
 ## ToDo
 - [ ] Make pulseaudio automatically adjust to the current audio source
-- [ ] Implement different styles
 - [ ] pack different draw styles in seperate .c ?
 
 ## Audio Setup
@@ -76,6 +75,10 @@ Other Options:
 ### Basic Bar Style
 
 ![Screenshot of basic bar style](images/style_basic_bar.png)
+
+### Mirrored Bar Style
+
+![Screenshot of mirrored bar style](images/style_mirrored_bar.png)
 
 ### Colored Bar Style
 
